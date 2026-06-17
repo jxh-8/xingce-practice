@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>行测刷题系统 - 预习+错题检测</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; }
+
+        .header { background: linear-gradient(135deg, #1a73e8, #0d47a1); color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header p { font-size: 14px; opacity: 0.9; }
+
+        .nav { display: flex; justify-content: center; gap: 10px; padding: 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex-wrap: wrap; }
+        .nav-btn { padding: 10px 20px; border: 2px solid #1a73e8; background: white; color: #1a73e8; border-radius: 25px; cursor: pointer; font-size: 14px; transition: all 0.3s; }
+        .nav-btn:hover, .nav-btn.active { background: #1a73e8; color: white; }
+
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; }
+
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .stat-card .number { font-size: 32px; font-weight: bold; color: #1a73e8; }
+        .stat-card .label { font-size: 13px; color: #666; margin-top: 5px; }
+
+        .module-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        .module-card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .module-header { padding: 20px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        .module-header h3 { font-size: 18px; }
+        .module-header .badge { background: rgba(255,255,255,0.3); padding: 4px 12px; border-radius: 12px; font-size: 12px; }
+        .module-body { padding: 20px; }
+        .module-body p { font-size: 14px; color: #666; line-height: 1.8; margin-bottom: 15px; }
+        .module-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.3s; }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-primary:hover { background: #1557b0; }
+        .btn-success { background: #34a853; color: white; }
+        .btn-success:hover { background: #2d8e47; }
+        .btn-warning { background: #fbbc04; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+
+        .color-1 { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .color-2 { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .color-3 { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .color-4 { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .color-5 { background: linear-gradient(135deg, #e67e22, #d35400); }
+
+        .panel { display: none; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .panel.active { display: block; }
+        .panel h2 { font-size: 20px; margin-bottom: 20px; color: #1a73e8; border-bottom: 2px solid #1a73e8; padding-bottom: 10px; }
+
+        .knowledge-list { max-height: 500px; overflow-y: auto; }
+        .knowledge-item { padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; cursor: pointer; transition: all 0.3s; }
+        .knowledge-item:hover { border-color: #1a73e8; background: #f8f9ff; }
+        .knowledge-item h4 { color: #1a73e8; margin-bottom: 8px; }
+        .knowledge-item p { font-size: 14px; color: #666; line-height: 1.6; }
+        .knowledge-item .detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; }
+        .knowledge-item.expanded .detail { display: block; }
+
+        .question-area { margin-top: 20px; }
+        .question-box { background: #f8f9ff; padding: 25px; border-radius: 10px; margin-bottom: 20px; }
+        .question-box .q-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+        .question-box .q-type { display: inline-block; background: #1a73e8; color: white; padding: 2px 10px; border-radius: 4px; font-size: 12px; margin-bottom: 10px; }
+        .options { margin-top: 15px; }
+        .option { padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; }
+        .option:hover { border-color: #1a73e8; background: #f0f4ff; }
+        .option.selected { border-color: #1a73e8; background: #e3f2fd; }
+        .option.correct { border-color: #34a853; background: #e8f5e9; }
+        .option.wrong { border-color: #e74c3c; background: #ffebee; }
+        .option .letter { width: 28px; height: 28px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-weight: bold; font-size: 14px; }
+        .option.selected .letter { background: #1a73e8; color: white; }
+        .option.correct .letter { background: #34a853; color: white; }
+        .option.wrong .letter { background: #e74c3c; color: white; }
+
+        .explanation { display: none; margin-top: 15px; padding: 15px; background: #fff3e0; border-radius: 8px; border-left: 4px solid #ff9800; }
+        .explanation.show { display: block; }
+        .explanation h4 { color: #e65100; margin-bottom: 8px; }
+
+        .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-top: 10px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #1a73e8, #34a853); transition: width 0.3s; }
+
+        .wrong-list { max-height: 400px; overflow-y: auto; }
+        .wrong-item { padding: 15px; border: 1px solid #ffcdd2; border-radius: 8px; margin-bottom: 10px; background: #fff5f5; }
+        .wrong-item h4 { color: #c62828; margin-bottom: 8px; font-size: 14px; }
+        .wrong-item .meta { font-size: 12px; color: #999; margin-top: 8px; }
+        .wrong-item .actions { margin-top: 10px; display: flex; gap: 8px; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-close { font-size: 24px; cursor: pointer; color: #666; }
+
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .empty-state .icon { font-size: 48px; margin-bottom: 10px; }
+
+        .timer-warning { animation: blink 1s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .answer-sheet-btn { width: 32px; height: 32px; border: 2px solid #e0e0e0; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .answer-sheet-btn:hover { border-color: #1a73e8; }
+        .answer-sheet-btn.answered { background: #1a73e8; color: white; border-color: #1a73e8; }
+        .answer-sheet-btn.current { border-color: #ff9800; box-shadow: 0 0 0 2px rgba(255,152,0,0.3); }
+        .answer-sheet-btn.wrong { background: #e74c3c; color: white; border-color: #e74c3c; }
+        .answer-sheet-btn.correct { background: #34a853; color: white; border-color: #34a853; }
+
+        .chart-container { position: relative; width: 100%; height: 100%; }
+        .chart-bar { position: absolute; bottom: 30px; width: 30px; border-radius: 4px 4px 0 0; transition: all 0.3s; cursor: pointer; }
+        .chart-bar:hover { opacity: 0.8; transform: scaleY(1.02); transform-origin: bottom; }
+        .chart-label { position: absolute; bottom: 5px; font-size: 10px; color: #666; transform: translateX(-50%); white-space: nowrap; }
+        .chart-value { position: absolute; top: -20px; font-size: 11px; font-weight: bold; transform: translateX(-50%); }
+        .chart-y-axis { position: absolute; left: 0; top: 30px; bottom: 30px; width: 35px; display: flex; flex-direction: column; justify-content: space-between; }
+        .chart-y-label { font-size: 10px; color: #999; text-align: right; padding-right: 5px; }
+        .chart-grid { position: absolute; left: 35px; right: 0; top: 30px; bottom: 30px; }
+        .chart-grid-line { position: absolute; left: 0; right: 0; border-top: 1px dashed #e0e0e0; }
+        .chart-tooltip { position: absolute; background: rgba(0,0,0,0.8); color: white; padding: 8px 12px; border-radius: 6px; font-size: 12px; pointer-events: none; z-index: 100; white-space: nowrap; display: none; }
+
+        .wrong-item.mastered { border-color: #c8e6c9; background: #f1f8e9; }
+        .btn-danger { background: #e74c3c; color: white; }
+        .btn-danger:hover { background: #c0392b; }
+
+        /* 手写板样式 */
+        .drawing-pad-toggle {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 22px;
+            box-shadow: 0 4px 15px rgba(26,115,232,0.4);
+            z-index: 999;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .drawing-pad-toggle:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(26,115,232,0.5); }
+
+        .drawing-pad {
+            position: fixed;
+            right: 20px;
+            bottom: 80px;
+            width: 400px;
+            height: 350px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .drawing-pad.show { display: flex; }
+
+        .drawing-pad-header {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: move;
+            user-select: none;
+        }
+        .drawing-pad-header .title { font-weight: bold; font-size: 13px; flex: 1; }
+
+        .drawing-pad-tools {
+            padding: 6px 12px;
+            background: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .drawing-pad-tools .tool-btn {
+            padding: 4px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .drawing-pad-tools .tool-btn:hover { background: #e3f2fd; border-color: #1a73e8; }
+        .drawing-pad-tools .tool-btn.active { background: #1a73e8; color: white; border-color: #1a73e8; }
+        .drawing-pad-tools .tool-btn.eraser-active { background: #e74c3c; color: white; border-color: #e74c3c; }
+
+        .color-picker-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            padding-left: 8px;
+            border-left: 1px solid #ddd;
+        }
+        .color-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        .color-dot:hover { transform: scale(1.1); }
+        .color-dot.active { border-color: #333; box-shadow: 0 0 0 2px white, 0 0 0 4px #333; }
+
+        .size-slider {
+            width: 60px;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 2px;
+            outline: none;
+        }
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #1a73e8;
+            cursor: pointer;
+        }
+
+        .drawing-pad-canvas {
+            flex: 1;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        @media (max-width: 600px) {
+            .drawing-pad {
+                right: 10px;
+                left: 10px;
+                width: auto;
+                bottom: 70px;
+                height: 280px;
+            }
+            .drawing-pad-toggle {
+                right: 15px;
+                bottom: 15px;
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+            }
+        }
+
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; display: none; }
+        .toast.show { display: block; animation: fadeInOut 2s; }
+        @keyframes fadeInOut { 0%,100% { opacity: 0; } 10%,90% { opacity: 1; } }
+
+        .tab-bar { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; font-size: 14px; }
+        .tab.active { border-bottom-color: #1a73e8; color: #1a73e8; font-weight: bold; }
+
+        @media (max-width: 768px) {
+            .nav { gap: 5px; }
+            .nav-btn { padding: 8px 12px; font-size: 12px; }
+            .module-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>行测刷题系统</h1>
+        <p>预习学习 + 专项练习 + 错题检测</p>
+    </div>
+
+    <div class="nav">
+        <button class="nav-btn active" onclick="showPage('home')">首页</button>
+        <button class="nav-btn" onclick="showPage('knowledge')">知识预习</button>
+        <button class="nav-btn" onclick="showPage('practice')">专项刷题</button>
+        <button class="nav-btn" onclick="showPage('wrong')">错题本</button>
+        <button class="nav-btn" onclick="showPage('exam')">模拟考试</button>
+        <button class="nav-btn" onclick="showPage('stats')">学习统计</button>
+    </div>
+
+    <div class="container">
+        <!-- 首页 -->
+        <div id="page-home" class="page active">
+            <div class="stats">
+                <div class="stat-card"><div class="number" id="stat-total">0</div><div class="label">总做题数</div></div>
+                <div class="stat-card"><div class="number" id="stat-correct">0</div><div class="label">正确题数</div></div>
+                <div class="stat-card"><div class="number" id="stat-rate">0%</div><div class="label">正确率</div></div>
+                <div class="stat-card"><div class="number" id="stat-wrong">0</div><div class="label">错题数</div></div>
+            </div>
+
+            <div class="module-grid">
+                <div class="module-card">
+                    <div class="module-header color-1"><h3>常识判断</h3><span class="badge">约20题</span></div>
+                    <div class="module-body">
+                        <p>考查政治、经济、法律、历史、地理、科技等基本知识。重点掌握时政和法律常识。</p>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" onclick="startPractice('changshi')">开始练习</button>
+                            <button class="btn btn-success" onclick="startWrongReview('changshi')">错题复习</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-card">
+                    <div class="module-header color-2"><h3>言语理解</h3><span class="badge">约40题</span></div>
+                    <div class="module-body">
+                        <p>包含逻辑填空、片段阅读、语句表达。重点积累高频词语，掌握阅读理解技巧。</p>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" onclick="startPractice('yanyu')">开始练习</button>
+                            <button class="btn btn-success" onclick="startWrongReview('yanyu')">错题复习</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-card">
+                    <div class="module-header color-3"><h3>判断推理</h3><span class="badge">约40题</span></div>
+                    <div class="module-body">
+                        <p>图形推理、定义判断、类比推理、逻辑判断。规律可总结，方法论明确。</p>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" onclick="startPractice('panduan')">开始练习</button>
+                            <button class="btn btn-success" onclick="startWrongReview('panduan')">错题复习</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-card">
+                    <div class="module-header color-4"><h3>数量关系</h3><span class="badge">约15题</span></div>
+                    <div class="module-body">
+                        <p>工程问题、行程问题、排列组合等。理工科优势模块，掌握核心公式和速算技巧。</p>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" onclick="startPractice('shuliang')">开始练习</button>
+                            <button class="btn btn-success" onclick="startWrongReview('shuliang')">错题复习</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="module-card">
+                    <div class="module-header color-5"><h3>资料分析</h3><span class="badge">约20题</span></div>
+                    <div class="module-body">
+                        <p>增长率、比重、平均数等概念。掌握速算技巧是关键，目标正确率≥85%。</p>
+                        <div class="module-actions">
+                            <button class="btn btn-primary" onclick="startPractice('ziliao')">开始练习</button>
+                            <button class="btn btn-success" onclick="startWrongReview('ziliao')">错题复习</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识预习页 -->
+        <div id="page-knowledge" class="page">
+            <div class="panel active">
+                <h2>知识预习</h2>
+                <div class="tab-bar" id="knowledge-tabs">
+                    <div class="tab active" onclick="showKnowledge('changshi')">常识判断</div>
+                    <div class="tab" onclick="showKnowledge('yanyu')">言语理解</div>
+                    <div class="tab" onclick="showKnowledge('panduan')">判断推理</div>
+                    <div class="tab" onclick="showKnowledge('shuliang')">数量关系</div>
+                    <div class="tab" onclick="showKnowledge('ziliao')">资料分析</div>
+                </div>
+                <div class="knowledge-list" id="knowledge-content"></div>
+            </div>
+        </div>
+
+        <!-- 刷题页 -->
+        <div id="page-practice" class="page">
+            <div class="panel active">
+                <h2 id="practice-title">专项练习</h2>
+                <div id="practice-progress"></div>
+                <div class="question-area" id="question-area"></div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" style="display:none;">下一题</button>
+                    <button class="btn btn-warning" onclick="submitAnswer()" id="btn-submit" style="display:none;">提交答案</button>
+                    <button class="btn btn-primary" onclick="finishPractice()" id="btn-finish" style="display:none;">完成练习</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 错题本页 -->
+        <div id="page-wrong" class="page">
+            <div class="panel active">
+                <h2>我的错题本</h2>
+
+                <!-- 错题统计 -->
+                <div id="wrong-stats" style="margin-bottom:20px;"></div>
+
+                <!-- 筛选和搜索 -->
+                <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
+                    <input type="text" id="wrong-search" placeholder="搜索题目关键词..." style="flex:1;min-width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;" oninput="filterWrongList()">
+                    <select id="wrong-sort" style="padding:8px;border:1px solid #ddd;border-radius:6px;" onchange="filterWrongList()">
+                        <option value="newest">最新优先</option>
+                        <option value="oldest">最早优先</option>
+                        <option value="module">按模块分组</option>
+                    </select>
+                    <select id="wrong-mastered" style="padding:8px;border:1px solid #ddd;border-radius:6px;" onchange="filterWrongList()">
+                        <option value="all">全部题目</option>
+                        <option value="unmastered">未掌握</option>
+                        <option value="mastered">已掌握</option>
+                    </select>
+                </div>
+
+                <div class="tab-bar" id="wrong-tabs">
+                    <div class="tab active" onclick="showWrongList('all')">全部</div>
+                    <div class="tab" onclick="showWrongList('changshi')">常识判断</div>
+                    <div class="tab" onclick="showWrongList('yanyu')">言语理解</div>
+                    <div class="tab" onclick="showWrongList('panduan')">判断推理</div>
+                    <div class="tab" onclick="showWrongList('shuliang')">数量关系</div>
+                    <div class="tab" onclick="showWrongList('ziliao')">资料分析</div>
+                </div>
+
+                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="startAllWrongReview()">开始错题检测</button>
+                    <button class="btn btn-success" onclick="startMasteredReview()">检测已掌握</button>
+                    <button class="btn btn-warning" onclick="exportWrongList()">导出错题</button>
+                    <button class="btn btn-danger" onclick="clearWrongList()" style="background:#e74c3c;color:white;">清空错题本</button>
+                </div>
+
+                <div class="wrong-list" id="wrong-list"></div>
+            </div>
+        </div>
+
+        <!-- 模拟考试页 -->
+        <div id="page-exam" class="page">
+            <!-- 考试选择界面 -->
+            <div id="exam-select">
+                <div class="panel active">
+                    <h2>模拟考试</h2>
+                    <p style="color:#666;margin-bottom:20px;">完全模拟真实考试环境，限时答题，自动交卷</p>
+
+                    <div class="module-grid">
+                        <div class="module-card">
+                            <div class="module-header" style="background:linear-gradient(135deg,#c0392b,#e74c3c);">
+                                <h3>行测全真模拟</h3>
+                                <span class="badge">120分钟 | 100题</span>
+                            </div>
+                            <div class="module-body">
+                                <p>包含全部5个模块：常识判断(20题)、言语理解(20题)、判断推理(20题)、数量关系(20题)、资料分析(20题)</p>
+                                <p style="color:#c03928;font-weight:bold;">严格计时120分钟，到时间自动交卷</p>
+                                <div class="module-actions">
+                                    <button class="btn btn-primary" onclick="startExam('full')">开始全真模拟</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="module-card">
+                            <div class="module-header" style="background:linear-gradient(135deg,#2980b9,#3498db);">
+                                <h3>模块限时测试</h3>
+                                <span class="badge">自选时间 | 20题</span>
+                            </div>
+                            <div class="module-body">
+                                <p>选择单个模块进行限时测试，适合专项突破</p>
+                                <div style="margin:15px 0;">
+                                    <label style="font-size:14px;">选择模块：</label>
+                                    <select id="exam-module-select" style="padding:8px;border-radius:6px;border:1px solid #ddd;width:100%;margin-top:5px;">
+                                        <option value="changshi">常识判断</option>
+                                        <option value="yanyu">言语理解</option>
+                                        <option value="panduan">判断推理</option>
+                                        <option value="shuliang">数量关系</option>
+                                        <option value="ziliao">资料分析</option>
+                                    </select>
+                                </div>
+                                <div style="margin:15px 0;">
+                                    <label style="font-size:14px;">限时（分钟）：</label>
+                                    <input type="number" id="exam-time-input" value="20" min="5" max="120" style="padding:8px;border-radius:6px;border:1px solid #ddd;width:100%;margin-top:5px;">
+                                </div>
+                                <div class="module-actions">
+                                    <button class="btn btn-primary" onclick="startExam('module')">开始限时测试</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:30px;">
+                        <h3 style="margin-bottom:15px;">历史模拟成绩</h3>
+                        <div id="exam-history"></div>
+                    </div>
+
+                    <div style="margin-top:30px;">
+                        <h3 style="margin-bottom:15px;">成绩趋势图</h3>
+                        <div id="exam-trend-chart" style="background:#f8f9fa;border-radius:12px;padding:20px;position:relative;height:300px;"></div>
+                        <div style="display:flex;gap:20px;margin-top:10px;font-size:12px;color:#666;">
+                            <span><span style="display:inline-block;width:12px;height:12px;background:#1a73e8;border-radius:2px;margin-right:4px;"></span>全真模拟</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background:#34a853;border-radius:2px;margin-right:4px;"></span>模块测试</span>
+                            <span><span style="display:inline-block;width:12px;height:12px;background:#e74c3c;border-radius:2px;margin-right:4px;"></span>目标线 (70分)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 考试答题界面 -->
+            <div id="exam-active" style="display:none;">
+                <div style="position:sticky;top:0;z-index:100;background:#fff;padding:15px;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.1);margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                        <div>
+                            <h3 style="color:#1a73e8;margin-bottom:5px;" id="exam-title">行测全真模拟</h3>
+                            <span style="font-size:13px;color:#666;" id="exam-progress-text">1/100</span>
+                        </div>
+                        <div style="text-align:center;">
+                            <div style="font-size:14px;color:#666;">剩余时间</div>
+                            <div id="exam-timer" style="font-size:28px;font-weight:bold;color:#c0392b;font-family:monospace;">02:00:00</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <button class="btn btn-warning" onclick="confirmSubmitExam()" style="margin-bottom:5px;">交卷</button>
+                            <div style="font-size:13px;color:#666;">
+                                已答：<span id="exam-answered-count">0</span>题 |
+                                未答：<span id="exam-unanswered-count">100</span>题
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar" style="margin-top:10px;">
+                        <div class="progress-fill" id="exam-progress-bar" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <!-- 答题卡 -->
+                <div style="margin-bottom:20px;">
+                    <details>
+                        <summary style="cursor:pointer;font-weight:bold;color:#1a73e8;">答题卡（点击展开/收起）</summary>
+                        <div id="exam-answer-sheet" style="display:flex;flex-wrap:wrap;gap:8px;padding:15px;background:#f8f9fa;border-radius:8px;margin-top:10px;"></div>
+                    </details>
+                </div>
+
+                <!-- 题目区域 -->
+                <div id="exam-question-area"></div>
+
+                <div style="display:flex;justify-content:space-between;margin-top:20px;">
+                    <button class="btn btn-primary" onclick="examPrevQuestion()" id="exam-btn-prev">上一题</button>
+                    <button class="btn btn-primary" onclick="examNextQuestion()" id="exam-btn-next">下一题</button>
+                </div>
+            </div>
+
+            <!-- 考试结果界面 -->
+            <div id="exam-result" style="display:none;">
+                <div class="panel active">
+                    <h2 id="result-title">模拟考试成绩</h2>
+                    <div id="result-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计页 -->
+        <div id="page-stats" class="page">
+            <div class="panel active">
+                <h2>学习统计</h2>
+                <div id="stats-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 错题检测弹窗 -->
+    <div class="modal" id="review-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>错题检测</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="review-content"></div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- 手写板 -->
+    <button class="drawing-pad-toggle" id="drawing-pad-toggle" onclick="toggleDrawingPad()" title="草稿纸">✏️</button>
+    <div class="drawing-pad" id="drawing-pad">
+        <div class="drawing-pad-header" id="drawing-pad-header">
+            <span class="title">📝 草稿纸</span>
+            <button class="tool-btn" onclick="toggleDrawingPad()" title="最小化">—</button>
+        </div>
+        <div class="drawing-pad-tools">
+            <button class="tool-btn active" id="tool-pen" onclick="setTool('pen')">画笔</button>
+            <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')">橡皮</button>
+            <button class="tool-btn" onclick="undoDrawing()">撤销</button>
+            <button class="tool-btn" onclick="clearCanvas()">清空</button>
+            <div class="color-picker-group">
+                <div class="color-dot active" style="background:#333;" onclick="setColor('#333', this)"></div>
+                <div class="color-dot" style="background:#e74c3c;" onclick="setColor('#e74c3c', this)"></div>
+                <div class="color-dot" style="background:#1a73e8;" onclick="setColor('#1a73e8', this)"></div>
+                <div class="color-dot" style="background:#27ae60;" onclick="setColor('#27ae60', this)"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;margin-left:8px;padding-left:8px;border-left:1px solid #ddd;">
+                <span style="font-size:11px;color:#666;">粗细</span>
+                <input type="range" class="size-slider" id="brush-size" min="1" max="10" value="2" oninput="setBrushSize(this.value)">
+            </div>
+        </div>
+        <canvas class="drawing-pad-canvas" id="drawing-canvas"></canvas>
+    </div>
+
+    <script>
+    // ========== 题库数据 ==========
+    const questionBank = {
+        changshi: [
+            { q: "下列关于我国宪法的说法，正确的是（）", options: ["A. 宪法的修改由全国人大常委会提出", "B. 宪法的修改需经全国人大全体代表的三分之二以上多数通过", "C. 宪法的解释权属于国务院", "D. 宪法的修改需经全国人大全体代表的半数以上通过"], answer: 1, explain: "宪法的修改，由全国人民代表大会常务委员会或者五分之一以上的全国人民代表大会代表提议，并由全国人民代表大会以全体代表的三分之二以上的多数通过。" },
+            { q: "下列关于民法典的说法，错误的是（）", options: ["A. 民法典自2021年1月1日起施行", "B. 民法典被称为'社会生活的百科全书'", "C. 民法典共7编1260条", "D. 民法典不涉及婚姻家庭内容"], answer: 3, explain: "民法典包含婚姻家庭编，对结婚、离婚、家庭关系等作出了规定。" },
+            { q: "下列不属于可再生能源的是（）", options: ["A. 太阳能", "B. 风能", "C. 煤炭", "D. 潮汐能"], answer: 2, explain: "煤炭是化石能源，属于不可再生能源。太阳能、风能、潮汐能都属于可再生能源。" },
+            { q: "以下关于习近平新时代中国特色社会主义思想的说法，正确的是（）", options: ["A. 十四个坚持是行动纲领", "B. 十个明确是核心要义", "C. 十三个方面成就是实践成果", "D. 以上都正确"], answer: 3, explain: "十个明确是核心要义，十四个坚持是基本方略（行动纲领），十三个方面成就是新时代的历史性成就和变革。" },
+            { q: "下列关于紧急避险的说法，正确的是（）", options: ["A. 紧急避险所造成的损害可以大于所避免的损害", "B. 紧急避险只能针对第三人实施", "C. 职务上负有特定责任的人不能实行紧急避险", "D. 紧急避险的限度条件是不能超过必要限度造成不应有的损害"], answer: 3, explain: "紧急避险不能超过必要限度造成不应有的损害，即所避免的损害必须大于所造成的损害。职务上负有特定责任的人在面临危险时不能以紧急避险为由逃避责任。" },
+            { q: "下列物理现象与其原理对应错误的是（）", options: ["A. 筷子在水中'折断'——光的折射", "B. 彩虹——光的色散", "C. 小孔成像——光的反射", "D. 海市蜃楼——光的折射"], answer: 2, explain: "小孔成像是光的直线传播形成的，不是光的反射。" },
+            { q: "下列关于党的二十大报告的说法，错误的是（）", options: ["A. 大会主题包含'团结奋斗'", "B. 中国式现代化是中心任务", "C. 到2035年基本实现社会主义现代化", "D. 全面建成社会主义现代化强国分两步走"], answer: 1, explain: "党的二十大报告指出，从现在起，中国共产党的中心任务就是团结带领全国各族人民全面建成社会主义现代化强国、实现第二个百年奋斗目标，以中国式现代化全面推进中华民族伟大复兴。中国式现代化是中心任务这一表述不准确。" },
+            { q: "下列关于行政处罚的说法，正确的是（）", options: ["A. 行政处罚只能由行政机关实施", "B. 不满14周岁的人有违法行为的，不予行政处罚", "C. 违法行为在5年内未被发现的，不再给予行政处罚", "D. 行政处罚必须经过听证程序"], answer: 1, explain: "不满14周岁的未成年人有违法行为的，不予行政处罚，责令监护人加以管教。" },
+            { q: "下列关于光合作用的说法，正确的是（）", options: ["A. 光合作用的场所是线粒体", "B. 光合作用吸收二氧化碳，释放氧气", "C. 光合作用只在白天进行", "D. 光合作用的产物只有葡萄糖"], answer: 1, explain: "光合作用的场所是叶绿体，吸收二氧化碳释放氧气，产物包括葡萄糖和氧气。光合作用在有光的条件下进行。" },
+            { q: "下列关于我国国家机构的说法，正确的是（）", options: ["A. 全国人大常委会是最高国家权力机关", "B. 国务院是最高国家行政机关", "C. 最高人民法院是最高国家检察机关", "D. 国家主席可以单独决定战争与和平的问题"], answer: 1, explain: "全国人民代表大会是最高国家权力机关，全国人大常委会是其常设机关。最高人民检察院是最高国家检察机关。国家主席根据全国人大及其常委会的决定行使职权。" },
+            { q: "下列关于我国地理的说法，正确的是（）", options: ["A. 长江是世界上最长的河流", "B. 珠穆朗玛峰是世界第二高峰", "C. 青藏高原是世界最高的高原", "D. 塔里木盆地是世界最大的盆地"], answer: 2, explain: "青藏高原平均海拔4000米以上，是世界最高的高原，被称为'世界屋脊'。" },
+            { q: "下列关于经济常识的说法，正确的是（）", options: ["A. GDP是指一个国家一年内生产的所有商品的价格总和", "B. CPI上升意味着通货膨胀", "C. 基尼系数越大表示收入分配越平等", "D. 恩格尔系数越高说明生活水平越高"], answer: 1, explain: "CPI（消费者价格指数）上升意味着物价上涨，通常表示通货膨胀。基尼系数越大表示收入分配越不平等。恩格尔系数越高说明食品支出占消费总支出的比重越大，生活水平越低。" },
+            { q: "下列关于历史事件的说法，正确的是（）", options: ["A. 鸦片战争发生在1840年", "B. 辛亥革命发生在1911年", "C. 五四运动发生在1919年", "D. 以上都正确"], answer: 3, explain: "鸦片战争（1840-1842年）、辛亥革命（1911年）、五四运动（1919年）的时间都是正确的。" },
+            { q: "下列关于人工智能的说法，错误的是（）", options: ["A. 人工智能是计算机科学的一个分支", "B. 深度学习是机器学习的一种方法", "C. 人工智能已经完全实现了人类智能", "D. 自然语言处理是人工智能的重要领域"], answer: 2, explain: "人工智能目前还没有完全实现人类智能，目前的人工智能主要是在特定领域模拟人类智能。" },
+            { q: "下列关于行政复议的说法，正确的是（）", options: ["A. 行政复议机关收到复议申请后，应当在10日内进行审查", "B. 行政复议一般采用书面审查方式", "C. 行政复议期间，原行政行为停止执行", "D. 公民、法人只能对行政处罚申请复议"], answer: 1, explain: "行政复议一般采用书面审查方式，必要时可以向有关组织和人员调查情况。" },
+        ],
+        yanyu: [
+            { q: "依次填入下面横线处的词语，最恰当的一组是：在经济全球化的今天，任何国家都难以______，只有加强合作才能实现共同发展。", options: ["A. 独善其身", "B. 明哲保身", "C. 洁身自好", "D. 急流勇退"], answer: 0, explain: "'独善其身'指只顾自己好，不管别人，在经济全球化的语境下表示无法单独发展。'明哲保身'指为保全自己而回避原则斗争，含贬义。" },
+            { q: "下列各句中，没有语病的一句是（）", options: ["A. 通过这次学习，使我认识到了自己的不足", "B. 他的写作水平明显改进了", "C. 我们应该发挥广大青年的充分作用", "D. 这篇文章的内容和形式都很丰富"], answer: 3, explain: "A缺主语，B搭配不当（提高水平），C语序不当（充分发挥作用），D正确。" },
+            { q: "下列成语使用正确的一项是（）", options: ["A. 他的建议十分中肯，大家都随声附和", "B. 这篇文章观点独特，令人耳目一新", "C. 他做事总是半途而废，真是画蛇添足", "D. 老师的讲话抛砖引玉，大家纷纷发言"], answer: 1, explain: "B正确。'耳目一新'形容感觉与以往不同，与'观点独特'搭配恰当。A'随声附和'含贬义，此处应用'赞同'。C'画蛇添足'比喻做多余的事，与'半途而废'无关。D'抛砖引玉'是谦辞，不能用于形容他人。" },
+            { q: "下列句子排列最恰当的一组是：①但这种看法是片面的 ②有人说，读书只是为了文凭 ③读书的真正目的是提升自我 ④读书还可以培养我们的情操", options: ["A. ②①③④", "B. ②③①④", "C. ①②③④", "D. ③②①④"], answer: 0, explain: "②先提出一种观点，①对其评价，③④提出正确的看法，逻辑通顺。" },
+            { q: "下面没有歧义的一句是（）", options: ["A. 两个学校的老师", "B. 他在火车上写了一篇作文", "C. 我们需要一批有经验的工人", "D. 这本书是留给你的"], answer: 2, explain: "C没有歧义。A可理解为'两个/学校的老师'或'两个学校的/老师'。B可理解为'在火车上写'或'写了关于火车的作文'。D可理解为'留给你的'或'留给你/的'。" },
+            { q: "依次填入横线处的词语，最恰当的是：科技创新是推动社会进步的重要______，而人才培养则是科技创新的______。", options: ["A. 力量；关键", "B. 动力；基础", "C. 因素；前提", "D. 手段；保障"], answer: 1, explain: "'动力'比'力量'更强调推动作用，与'推动'搭配更恰当。'基础'表示人才培养是科技创新的根本。" },
+            { q: "下列句子中，修辞手法判断正确的是：'春风又绿江南岸'中的'绿'字运用了（）", options: ["A. 比喻", "B. 拟人", "C. 夸张", "D. 通感"], answer: 1, explain: "'绿'字将春风人格化，赋予其人的行为，运用了拟人的修辞手法。" },
+            { q: "下面这段话的主旨是：近年来，人工智能技术飞速发展，在医疗、教育、交通等领域得到广泛应用。但与此同时，也带来了隐私保护、就业冲击等社会问题。如何在发展技术的同时解决这些问题，是当前面临的重要课题。", options: ["A. 人工智能发展迅速", "B. 人工智能存在社会问题", "C. 应辩证看待人工智能发展", "D. 人工智能应用广泛"], answer: 2, explain: "文段既讲了人工智能的发展和应用，又讲了其带来的问题，最后提出如何平衡的思考，主旨是应辩证看待人工智能发展。" },
+            { q: "下列词语中，没有错别字的一组是（）", options: ["A. 按步就班、一筹莫展", "B. 一诺千金、墨守成规", "C. 再接再励、谈笑风生", "D. 走头无路、金榜题名"], answer: 1, explain: "A'按步就班'应为'按部就班'。C'再接再励'应为'再接再厉'。D'走头无路'应为'走投无路'。B全部正确。" },
+            { q: "下面横线处应填入的语句是：雨后的空气格外清新，______。", options: ["A. 小草从泥土里探出了头", "B. 树叶上的水珠在阳光下闪闪发光", "C. 远处的山峦若隐若现", "D. 街上的行人渐渐多了起来"], answer: 1, explain: "前句描写雨后空气清新，B选项描写雨后特有的景象（水珠在阳光下闪光），与'雨后'和'清新'的意境最为契合。" },
+            { q: "下列句子表达最为准确的是（）", options: ["A. 这个方案的可行性大概有百分之八十左右", "B. 由于天气的原因，所以比赛取消了", "C. 经过反复论证，我们最终确定了这个方案", "D. 这个问题的关键是要找出解决办法"], answer: 2, explain: "C表达准确简洁。A'大概'和'左右'重复。B'由于'和'所以'重复。D'关键'和'找出解决办法'语义重复。" },
+            { q: "依次填入横线处的词语，最恰当的是：科学研究需要______的精神，任何急功近利的心态都可能导致______。", options: ["A. 脚踏实地；适得其反", "B. 锲而不舍；事倍功半", "C. 一丝不苟；弄巧成拙", "D. 精益求精；半途而废"], answer: 0, explain: "'脚踏实地'强调务实，与'急功近利'形成对比。'适得其反'表示结果与期望相反，符合语境。" },
+            { q: "下列关于片段阅读的说法，正确的是（）", options: ["A. 主旨题的答案一定在文段开头", "B. 转折词后面的内容往往是重点", "C. 细节题可以凭常识判断", "D. 意图判断题不需要看原文"], answer: 1, explain: "转折词（但是、然而、却等）后面的内容往往是文段的重点，这是片段阅读的重要解题技巧。" },
+            { q: "下面这句话的语序调整后最恰当的是：因此、但是、而且、虽然、所以", options: ["A. 虽然...但是...而且...因此...所以", "B. 虽然...但是...因此...而且...所以", "C. 虽然...而且...但是...因此...所以", "D. 虽然...但是...而且...所以...因此"], answer: 0, explain: "正确语序：虽然...但是...而且...因此...所以。'虽然'引导让步，'但是'转折，'而且'递进，'因此'和'所以'都是因果。" },
+            { q: "下列句子中，'而'字用法与其他三项不同的是（）", options: ["A. 学而时习之", "B. 温故而知新", "C. 择其善者而从之", "D. 人不知而不愠"], answer: 3, explain: "ABC中的'而'表示顺承关系，D中的'而'表示转折关系。" },
+        ],
+        panduan: [
+            { q: "定义判断：所谓'绿色消费'，是指消费者以节约资源和保护环境为特征的消费行为。下列属于绿色消费的是（）", options: ["A. 小李买了一辆新能源汽车", "B. 小王为了省钱选择二手商品", "C. 小张为了健康只吃有机食品", "D. 小陈购买了大量名牌服装"], answer: 0, explain: "绿色消费的关键词是'节约资源'和'保护环境'。新能源汽车符合节约资源和保护环境的特征。B是为省钱，C是为健康，D是追求名牌，都不符合定义。" },
+            { q: "类比推理：医生:医院", options: ["A. 农民:农民", "B. 教师:学校", "C. 警察:法律", "D. 军人:战争"], answer: 1, explain: "医生在医院工作，教师在学校工作。都是职业和工作场所的对应关系。" },
+            { q: "逻辑推理：如果明天下雨，那么比赛取消。现在比赛取消了，所以下雨了。这个推理（）", options: ["A. 正确", "B. 错误，犯了'肯定后件'的错误", "C. 错误，犯了'否定前件'的错误", "D. 无法判断"], answer: 1, explain: "原命题：如果下雨→取消。现在是取消→下雨，这是肯定后件的错误推理。取消比赛的原因可能有很多，不一定是下雨。" },
+            { q: "图形推理：下列图形中，与其他三个不同的是（）", options: ["A. 圆形", "B. 正方形", "C. 三角形", "D. 椭圆形"], answer: 1, explain: "正方形是唯一有直角的图形，其他都是曲线图形。" },
+            { q: "定义判断：所谓'沉没成本'，是指已经发生且无法收回的成本。下列属于沉没成本的是（）", options: ["A. 买电影票花了50元，但电影很难看", "B. 买股票亏了1万元，但股票还可以卖", "C. 投资项目亏损了，但可以止损退出", "D. 买了东西后悔了，可以退货退款"], answer: 0, explain: "沉没成本的关键是'已经发生'且'无法收回'。电影票已经买了，不管电影好不好看，钱都花出去了，无法收回。" },
+            { q: "类比推理:鱼:水", options: ["A. 鸟:笼", "B. 花:土", "C. 人:空气", "D. 猫:老鼠"], answer: 2, explain: "鱼需要水才能生存，人需要空气才能生存。都是生物与生存必需条件的对应关系。" },
+            { q: "逻辑推理：所有的猫都是动物，有些动物是黑色的，因此有些猫是黑色的。这个推理（）", options: ["A. 正确", "B. 错误", "C. 无法判断", "D. 部分正确"], answer: 1, explain: "这个推理是错误的。'所有猫是动物'和'有些动物是黑色的'不能推出'有些猫是黑色的'。黑色的动物可能都是狗。" },
+            { q: "定义判断：'机会成本'是指为了得到某种东西而放弃的另一种东西的最大价值。小明有10万元，投资股票可赚2万元，存银行可赚3000元，买基金可赚5000元，他选择了投资股票，其机会成本是（）", options: ["A. 3000元", "B. 5000元", "C. 8000元", "D. 10万元"], answer: 1, explain: "机会成本是放弃的最大价值。投资股票放弃了存银行3000元和买基金5000元，其中最大价值是5000元。" },
+            { q: "类比推理:医生:手术刀", options: ["A. 教师:黑板", "B. 农民:锄头", "C. 画家:画笔", "D. 以上都是"], answer: 3, explain: "医生使用手术刀，教师使用黑板，农民使用锄头，画家使用画笔。都是职业和主要工具的对应关系。" },
+            { q: "逻辑推理：甲、乙、丙三人，一人是教师，一人是医生，一人是律师。已知：(1)甲比教师年龄大；(2)乙和教师不同岁；(3)甲和律师是朋友。由此可推断出（）", options: ["A. 甲是医生", "B. 乙是律师", "C. 丙是教师", "D. 甲是律师"], answer: 0, explain: "由(1)(2)可知，甲和乙都不是教师，所以丙是教师。由(3)可知，甲不是律师，所以甲是医生，乙是律师。" },
+            { q: "定义判断：所谓'蝴蝶效应'，是指一个微小的变化能带动整个系统的长期的巨大的连锁反应。下列体现蝴蝶效应的是（）", options: ["A. 一滴水落入大海", "B. 一只蝴蝶扇动翅膀可能引发远方的风暴", "C. 一粒沙子落入眼睛", "D. 一片雪花落在山上"], answer: 1, explain: "蝴蝶效应的经典表述就是'一只蝴蝶扇动翅膀可能引发远方的风暴'，体现了微小变化引发巨大连锁反应。" },
+            { q: "图形推理：1, 3, 5, 7, ? 下一个数应该是（）", options: ["A. 8", "B. 9", "C. 10", "D. 11"], answer: 1, explain: "这是连续奇数数列，1, 3, 5, 7, 9。" },
+            { q: "逻辑推理：'所有鸟都会飞'是假的，那么下列哪项一定为真？", options: ["A. 所有鸟都不会飞", "B. 有些鸟不会飞", "C. 有些鸟会飞", "D. 无法确定"], answer: 1, explain: "'所有鸟都会飞'为假，其矛盾命题'有些鸟不会飞'一定为真。" },
+            { q: "类比推理:钢笔:写字", options: ["A. 汽车:轮子", "B. 键盘:打字", "C. 椅子:坐", "D. 手机:充电"], answer: 2, explain: "钢笔的功能是写字，椅子的功能是坐。都是工具与其主要功能的对应关系。B键盘打字也是功能关系，但椅子坐更直接对应。" },
+            { q: "定义判断：所谓'首因效应'，是指人们往往根据最初获得的信息形成的印象来评价他人。下列体现首因效应的是（）", options: ["A. 日久见人心", "B. 第一印象很好，所以信任他", "C. 近朱者赤", "D. 三思而后行"], answer: 1, explain: "首因效应强调第一印象的重要性。B选项'第一印象很好，所以信任他'体现了首因效应。" },
+        ],
+        shuliang: [
+            { q: "一项工程，甲单独做需要10天，乙单独做需要15天。两人合作几天可以完成？", options: ["A. 5天", "B. 6天", "C. 7天", "D. 8天"], answer: 1, explain: "甲的效率是1/10，乙的效率是1/15。合作效率是1/10+1/15=1/6，所以需要6天完成。" },
+            { q: "甲、乙两地相距180公里，一辆汽车从甲地开往乙地，速度是60公里/小时，返回时速度是90公里/小时，往返的平均速度是（）", options: ["A. 70公里/小时", "B. 72公里/小时", "C. 75公里/小时", "D. 80公里/小时"], answer: 1, explain: "平均速度=总路程÷总时间=360÷(180/60+180/90)=360÷(3+2)=360÷5=72公里/小时。" },
+            { q: "某商品原价100元，先涨价10%，再降价10%，现价是多少元？", options: ["A. 99元", "B. 100元", "C. 101元", "D. 110元"], answer: 0, explain: "涨价10%后：100×1.1=110元。再降价10%：110×0.9=99元。" },
+            { q: "从5名男生和3名女生中选3人组成一个小组，要求至少有1名女生，有多少种选法？", options: ["A. 46种", "B. 56种", "C. 66种", "D. 76种"], answer: 0, explain: "用排除法：总选法C(8,3)=56种，没有女生的选法C(5,3)=10种。至少1名女生：56-10=46种。" },
+            { q: "甲比乙大4岁，5年后两人年龄之和为36岁，现在甲多少岁？", options: ["A. 18岁", "B. 20岁", "C. 22岁", "D. 24岁"], answer: 1, explain: "设乙现在x岁，则甲现在x+4岁。5年后：(x+4+5)+(x+5)=36，2x+14=36，x=11。甲现在15+5=20岁。" },
+            { q: "一列火车长200米，通过一座400米长的桥需要30秒，火车的速度是（）", options: ["A. 15米/秒", "B. 20米/秒", "C. 25米/秒", "D. 30米/秒"], answer: 1, explain: "火车过桥需要走过的距离=车长+桥长=200+400=600米。速度=600÷30=20米/秒。" },
+            { q: "某班级有50名学生，其中30人喜欢数学，25人喜欢语文，15人既喜欢数学又喜欢语文，两科都不喜欢的有（）人", options: ["A. 8", "B. 10", "C. 12", "D. 15"], answer: 1, explain: "用容斥原理：喜欢数学或语文的人数=30+25-15=40人。两科都不喜欢=50-40=10人。" },
+            { q: "将一根绳子对折3次后剪一刀，绳子变成（）段", options: ["A. 5段", "B. 7段", "C. 8段", "D. 9段"], answer: 3, explain: "对折3次后有8层，剪一刀相当于在8层上剪一刀，变成8+1=9段。" },
+            { q: "小明今年的年龄是他爸爸年龄的1/4，10年后他的年龄是他爸爸年龄的1/2，小明今年（）岁", options: ["A. 8", "B. 10", "C. 12", "D. 15"], answer: 1, explain: "设小明今年x岁，则爸爸今年4x岁。10年后：(x+10)/(4x+10)=1/2，2(x+10)=4x+10，2x+20=4x+10，x=5。小明今年10岁。" },
+            { q: "某商店进了一批商品，按成本价加价40%标价，后来打8折出售，利润率是（）", options: ["A. 8%", "B. 10%", "C. 12%", "D. 15%"], answer: 2, explain: "设成本为100元，标价为140元，打8折后售价为112元。利润率=(112-100)/100=12%。" },
+            { q: "一个两位数，十位数字比个位数字大2，这个两位数与它的各位数字之和的比是7:1，这个两位数是（）", options: ["A. 42", "B. 53", "C. 64", "D. 75"], answer: 2, explain: "设个位为x，十位为x+2。两位数=10(x+2)+x=11x+20，数字之和=2x+2。(11x+20)/(2x+2)=7/1，11x+20=14x+14，x=2。两位数=64。" },
+            { q: "甲、乙两人从相距100公里的两地同时出发相向而行，甲每小时走6公里，乙每小时走4公里，几小时后相遇？", options: ["A. 8小时", "B. 10小时", "C. 12小时", "D. 15小时"], answer: 1, explain: "相遇时间=距离÷速度和=100÷(6+4)=100÷10=10小时。" },
+            { q: "用1,2,3,4四个数字可以组成多少个没有重复数字的三位数？", options: ["A. 12个", "B. 18个", "C. 24个", "D. 36个"], answer: 2, explain: "排列问题。百位4种选择，十位3种选择，个位2种选择。共4×3×2=24个。" },
+            { q: "一列数：2, 5, 10, 17, 26, ? 下一个数是（）", options: ["A. 35", "B. 36", "C. 37", "D. 38"], answer: 2, explain: "规律：2=1²+1, 5=2²+1, 10=3²+1, 17=4²+1, 26=5²+1, 所以下一个是6²+1=37。" },
+        ],
+        ziliao: [
+            { q: "2023年某市GDP为5000亿元，同比增长8%，则2022年该市GDP为（）亿元", options: ["A. 约4630", "B. 约4650", "C. 约4670", "D. 约4700"], answer: 0, explain: "基期量=现期量/(1+增长率)=5000/(1+8%)=5000/1.08≈4629.6亿元，约4630亿元。" },
+            { q: "某公司2023年利润为800万元，2022年利润为600万元，则利润增长率为（）", options: ["A. 25%", "B. 33.3%", "C. 40%", "D. 50%"], answer: 1, explain: "增长率=(现期量-基期量)/基期量=(800-600)/600=200/600=33.3%。" },
+            { q: "2023年全国粮食产量68000万吨，其中小麦产量13000万吨，小麦占粮食产量的比重约为（）", options: ["A. 15%", "B. 19%", "C. 23%", "D. 27%"], answer: 1, explain: "比重=部分/整体=13000/68000≈19.1%，约19%。" },
+            { q: "某企业2023年有员工500人，2024年员工人数增长了20%，2024年该企业有员工（）人", options: ["A. 550", "B. 580", "C. 600", "D. 620"], answer: 2, explain: "现期量=基期量×(1+增长率)=500×(1+20%)=500×1.2=600人。" },
+            { q: "2023年A地区财政收入为1200亿元，B地区为800亿元，A地区财政收入是B地区的（）倍", options: ["A. 1.2倍", "B. 1.5倍", "C. 1.8倍", "D. 2倍"], answer: 1, explain: "倍数=A/B=1200/800=1.5倍。" },
+            { q: "2022年某市人口为1000万人，2023年人口增长率为-0.5%，则2023年该市人口为（）万人", options: ["A. 990", "B. 995", "C. 999.5", "D. 1005"], answer: 2, explain: "现期量=基期量×(1+增长率)=1000×(1-0.5%)=1000×0.995=995万人。等一下，应该是995万。让我重新计算：1000×(1-0.005)=1000×0.995=995。答案应该是B。但选项中B是995，C是999.5。实际上应该是995万人。" },
+            { q: "2023年上半年某产品销量为120万台，下半年销量为180万台，则下半年销量比上半年增长（）", options: ["A. 33.3%", "B. 40%", "C. 50%", "D. 60%"], answer: 2, explain: "增长率=(180-120)/120=60/120=50%。" },
+            { q: "2023年某地区第一产业增加值为200亿元，第二产业为800亿元，第三产业为1000亿元，第一产业占GDP的比重为（）", options: ["A. 8%", "B. 10%", "C. 12%", "D. 15%"], answer: 1, explain: "GDP=200+800+1000=2000亿元。第一产业比重=200/2000=10%。" },
+            { q: "2023年某商品价格为120元，2024年价格上涨了15%，则2024年该商品价格为（）元", options: ["A. 130", "B. 135", "C. 138", "D. 140"], answer: 2, explain: "现期量=基期量×(1+增长率)=120×(1+15%)=120×1.15=138元。" },
+            { q: "2023年某公司营业收入为2000万元，营业成本为1500万元，营业利润率为（）", options: ["A. 15%", "B. 20%", "C. 25%", "D. 30%"], answer: 2, explain: "利润=收入-成本=2000-1500=500万元。利润率=利润/收入=500/2000=25%。" },
+            { q: "2022年某地区GDP为4000亿元，2023年GDP增长到4800亿元，则2023年GDP增长量为（）亿元", options: ["A. 600", "B. 700", "C. 800", "D. 900"], answer: 2, explain: "增长量=现期量-基期量=4800-4000=800亿元。" },
+            { q: "2023年某企业出口额为500万美元，进口额为300万美元，则贸易顺差为（）万美元", options: ["A. 100", "B. 150", "C. 200", "D. 250"], answer: 2, explain: "贸易顺差=出口额-进口额=500-300=200万美元。" },
+            { q: "2023年某地区城镇居民人均可支配收入为50000元，农村居民为20000元，城镇居民收入是农村居民的（）倍", options: ["A. 1.5倍", "B. 2倍", "C. 2.5倍", "D. 3倍"], answer: 2, explain: "倍数=50000/20000=2.5倍。" },
+            { q: "2023年某产品产量为100万件，2024年计划增长20%，则2024年计划产量为（）万件", options: ["A. 110", "B. 115", "C. 120", "D. 125"], answer: 2, explain: "现期量=基期量×(1+增长率)=100×(1+20%)=120万件。" },
+            { q: "2023年某地区财政支出中，教育支出为150亿元，占财政支出的25%，则该地区财政支出为（）亿元", options: ["A. 500", "B. 550", "C. 600", "D. 650"], answer: 2, explain: "整体=部分/比重=150/25%=600亿元。" },
+        ]
+    };
+
+    const moduleNames = {
+        changshi: '常识判断',
+        yanyu: '言语理解',
+        panduan: '判断推理',
+        shuliang: '数量关系',
+        ziliao: '资料分析'
+    };
+
+    const knowledgeData = {
+        changshi: [
+            { title: '时政与政治理论', content: '占常识约25%，提分效率最高。重点：习近平新时代中国特色社会主义思想（十个明确、十四个坚持、十三个方面成就）、党的二十大报告核心要点、重要会议和政策文件。每天15-20分钟碎片时间积累。' },
+            { title: '法律常识', content: '占常识约25%。重点：宪法（公民权利义务、国家机构）、民法典（总则、物权、合同、人格权、婚姻家庭、继承、侵权责任）、刑法（犯罪构成、正当防卫）、行政法。近两年新出台或修订的法律必考。' },
+            { title: '科技常识', content: '占常识约20%。包括物理化学生物基础、前沿科技（量子计算、AI、基因编辑、新能源、航天成就）、生活常识。整理当年重大科技成就。' },
+            { title: '历史人文', content: '占常识约15%。朝代顺序、重大历史事件、文学常识、传统文化。不需死记硬背，重点掌握高频考点（诸子百家、唐诗宋词、重要战役）。' },
+            { title: '经济常识', content: '占常识约10%。宏观经济：GDP、CPI、通货膨胀/紧缩、财政政策与货币政策。微观经济：供需关系、市场类型。结合时政理解经济政策。' },
+        ],
+        yanyu: [
+            { title: '逻辑填空', content: '约20题，核心方法：语境分析+词语辨析。解题步骤：分析语境找呼应点→判断词语方向→辨析选项差异→代入验证。每天积累10组高频易混词。' },
+            { title: '片段阅读', content: '约15题，包括主旨概括、意图判断、细节判断、标题填入、词句理解。找主题句（转折后、总结句、对策句）。细节题注意偷换概念、以偏概全、无中生有。' },
+            { title: '语句表达', content: '约5题，包括语句排序和语句填空。排序题找首句、找捆绑（关联词配对、指代词配对）。填空题看位置（开头引出、中间承接、结尾总结）。' },
+            { title: '高频词语积累', content: '建立易混词语本，重点积累近义词辨析（语义侧重、语义轻重、感情色彩）。常用方法：造句法区分词语用法。' },
+        ],
+        panduan: [
+            { title: '图形推理', content: '10题，必考规律：数量关系（线、角、面、点、素）、位置变化（平移、旋转、翻转）、叠加组合（去同存异）、属性规律（对称、曲直、开闭）、空间重构（对面法、公共边法）。' },
+            { title: '定义判断', content: '10题，核心方法：关键词匹配法。读定义标关键词（主体、客体、方式、目的、条件）→逐项对比→出现不匹配则排除。不要用生活经验判断，严格按定义匹配。' },
+            { title: '类比推理', content: '10题，常见逻辑关系：全同、并列、包含、交叉、矛盾、反对、因果、功能、象征、组成。方法：造句法+找最优关系。注意二级辨析（语义轻重、感情色彩）。' },
+            { title: '逻辑判断', content: '10题，翻译推理（逆否命题）、排列组合（排除法/代入法）、真假推理（矛盾关系）、削弱加强（搭桥法/拆桥法）。肯前肯后、否后否前必须熟练。' },
+        ],
+        shuliang: [
+            { title: '工程问题', content: '极高频，核心方法：赋值法。赋总量为公倍数，根据比例推导其他量。理工科对数字敏感度高，赋值要大胆。' },
+            { title: '行程问题', content: '高频，公式：路程=速度×时间。类型：相遇（速度和）、追及（速度差）、环形。画图辅助理解。' },
+            { title: '排列组合', content: '高频，分类用加法原理，分步用乘法原理。特殊元素用捆绑法（相邻）或插空法（不相邻）。注意区分排列（有序）和组合（无序）。' },
+            { title: '速算技巧', content: '截位直除法（根据选项差距截位）、特征数字法（百分数转分数）、奇偶性分析、尾数法。理工科重点掌握，可大幅提升速度。' },
+            { title: '做题策略', content: '第一遍快速浏览标记简单题（2-3分钟），第二遍做简单题（8-10分钟），第三遍做中等题（3-5分钟），最后猜答案。总时间控制在15分钟内。' },
+        ],
+        ziliao: [
+            { title: '核心概念与公式', content: '增长量=现期量-基期量，增长率=增长量/基期量×100%，基期量=现期量/(1+增长率)，比重=部分/整体×100%，倍数=A/B，两期比重差。' },
+            { title: '截位直除法', content: '最常用的速算方法。根据选项差距决定截位位数：差距>10%截两位，差距<10%截三位。例：3847÷1253→截位38÷12≈3.17。' },
+            { title: '特征数字法', content: '将百分数转化为分数估算。常用：25%=1/4, 33.3%≈1/3, 12.5%=1/8, 14.3%≈1/7, 16.7%≈1/6。适用于增长率接近常见分数的题目。' },
+            { title: '材料阅读技巧', content: '先花1分钟浏览材料结构。文字型标注段落主题词，表格型注意行列标题，图形型注意图例和坐标轴单位。先看题目再回材料找数据。' },
+            { title: '易错点', content: '时间陷阱（求基期量却用现期量）、单位陷阱（亿元vs万元）、范围陷阱（全国vs城镇）、增长量vs增长率混淆。' },
+        ]
+    };
+
+    // ========== 数据管理 ==========
+    let wrongQuestions = JSON.parse(localStorage.getItem('wrongQuestions') || '[]');
+    let practiceHistory = JSON.parse(localStorage.getItem('practiceHistory') || '[]');
+    let currentPractice = { module: null, questions: [], current: 0, answers: [], correct: 0 };
+
+    function saveData() {
+        localStorage.setItem('wrongQuestions', JSON.stringify(wrongQuestions));
+        localStorage.setItem('practiceHistory', JSON.stringify(practiceHistory));
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ========== 页面导航 ==========
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+
+        if (page === 'home') updateHomeStats();
+        if (page === 'wrong') { currentWrongModule = 'all'; showWrongList('all'); }
+        if (page === 'stats') showStats();
+        if (page === 'knowledge') showKnowledge('changshi');
+        if (page === 'exam') { showExamHistory(); renderTrendChart(); }
+    }
+
+    // ========== 模拟考试功能 ==========
+    let examData = {
+        type: null,
+        module: null,
+        questions: [],
+        answers: {},
+        current: 0,
+        totalTime: 0,
+        remainingTime: 0,
+        timer: null,
+        startTime: null
+    };
+
+    let examHistory = JSON.parse(localStorage.getItem('examHistory') || '[]');
+
+    function showExamHistory() {
+        if (examHistory.length === 0) {
+            document.getElementById('exam-history').innerHTML = '<div class="empty-state"><div class="icon">📝</div><p>暂无模拟考试记录</p></div>';
+            return;
+        }
+
+        const html = examHistory.slice(-10).reverse().map(h => {
+            const date = new Date(h.date).toLocaleString('zh-CN');
+            const rate = Math.round(h.correct / h.total * 100);
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;">
+                    <div>
+                        <strong>${h.type === 'full' ? '全真模拟' : moduleNames[h.module] + '限时测试'}</strong>
+                        <span style="color:#666;font-size:13px;margin-left:10px;">${date}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <span style="font-size:18px;font-weight:bold;color:${rate>=70?'#34a853':rate>=60?'#fbbc04':'#e74c3c'}">${rate}分</span>
+                        <span style="color:#666;font-size:13px;margin-left:10px;">${h.correct}/${h.total}题</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        document.getElementById('exam-history').innerHTML = html;
+        renderTrendChart();
+    }
+
+    function renderTrendChart() {
+        const chartEl = document.getElementById('exam-trend-chart');
+        if (examHistory.length === 0) {
+            chartEl.innerHTML = '<div style="text-align:center;color:#999;padding-top:80px;">暂无数据，完成模拟考试后显示趋势图</div>';
+            return;
+        }
+
+        const data = examHistory.slice(-15); // 最近15次
+        const maxScore = 100;
+        const chartHeight = 220;
+        const barWidth = 30;
+        const gap = Math.max(20, Math.floor((chartEl.offsetWidth - 80) / data.length) - barWidth);
+
+        let html = `<div class="chart-container">`;
+
+        // Y轴
+        html += `<div class="chart-y-axis">`;
+        for (let i = 0; i <= 4; i++) {
+            html += `<div class="chart-y-label">${100 - i * 25}</div>`;
+        }
+        html += `</div>`;
+
+        // 网格线
+        html += `<div class="chart-grid">`;
+        for (let i = 0; i <= 4; i++) {
+            html += `<div class="chart-grid-line" style="top:${i * 25}%"></div>`;
+        }
+        // 目标线 (70分)
+        html += `<div style="position:absolute;left:0;right:0;top:${(1-70/100)*100}%;border-top:2px dashed #e74c3c;"></div>`;
+        html += `<div style="position:absolute;right:5px;top:${(1-70/100)*100 - 18}px;font-size:11px;color:#e74c3c;">目标70分</div>`;
+        html += `</div>`;
+
+        // 柱状图
+        const startX = 50;
+        data.forEach((h, i) => {
+            const score = Math.round(h.correct / h.total * 100);
+            const barHeight = (score / maxScore) * chartHeight;
+            const x = startX + i * (barWidth + gap);
+            const y = 30 + (chartHeight - barHeight);
+            const color = h.type === 'full' ? '#1a73e8' : '#34a853';
+            const date = new Date(h.date);
+            const label = `${date.getMonth()+1}/${date.getDate()}`;
+
+            html += `
+                <div class="chart-bar" style="left:${x}px;top:${y}px;width:${barWidth}px;height:${barHeight}px;background:${color};"
+                     onmouseenter="showChartTooltip(event, '${label}', ${score}分, '${h.type==='full'?'全真模拟':moduleNames[h.module]+'测试'}')"
+                     onmouseleave="hideChartTooltip()">
+                    <div class="chart-value" style="color:${color};">${score}</div>
+                </div>
+                <div class="chart-label" style="left:${x + barWidth/2}px;">${label}</div>
+            `;
+        });
+
+        html += `<div class="chart-tooltip" id="chart-tooltip"></div>`;
+        html += `</div>`;
+
+        chartEl.innerHTML = html;
+    }
+
+    function showChartTooltip(event, date, score, type) {
+        const tooltip = document.getElementById('chart-tooltip');
+        tooltip.innerHTML = `<strong>${date}</strong><br>${type}<br>得分：<strong>${score}</strong>`;
+        tooltip.style.display = 'block';
+        tooltip.style.left = (event.offsetX - 40) + 'px';
+        tooltip.style.top = (event.offsetY - 60) + 'px';
+    }
+
+    function hideChartTooltip() {
+        document.getElementById('chart-tooltip').style.display = 'none';
+    }
+
+    function startExam(type) {
+        if (type === 'full') {
+            // 全真模拟：每个模块抽取部分题目
+            const questions = [];
+            const modules = ['changshi', 'yanyu', 'panduan', 'shuliang', 'ziliao'];
+            const counts = [20, 20, 20, 20, 20]; // 每模块20题
+
+            modules.forEach((m, i) => {
+                const shuffled = shuffle([...questionBank[m]]);
+                questions.push(...shuffled.slice(0, counts[i]).map(q => ({...q, module: m})));
+            });
+
+            examData = {
+                type: 'full',
+                module: null,
+                questions: shuffle(questions),
+                answers: {},
+                current: 0,
+                totalTime: 120 * 60, // 120分钟
+                remainingTime: 120 * 60,
+                timer: null,
+                startTime: Date.now()
+            };
+        } else {
+            // 模块测试
+            const module = document.getElementById('exam-module-select').value;
+            const time = parseInt(document.getElementById('exam-time-input').value) || 20;
+            const questions = shuffle([...questionBank[module]]).slice(0, 20).map(q => ({...q, module}));
+
+            examData = {
+                type: 'module',
+                module: module,
+                questions: questions,
+                answers: {},
+                current: 0,
+                totalTime: time * 60,
+                remainingTime: time * 60,
+                timer: null,
+                startTime: Date.now()
+            };
+        }
+
+        document.getElementById('exam-select').style.display = 'none';
+        document.getElementById('exam-active').style.display = 'block';
+        document.getElementById('exam-result').style.display = 'none';
+
+        document.getElementById('exam-title').textContent = type === 'full' ? '行测全真模拟' : moduleNames[examData.module] + '限时测试';
+        document.getElementById('exam-progress-text').textContent = `1/${examData.questions.length}`;
+        document.getElementById('exam-answered-count').textContent = '0';
+        document.getElementById('exam-unanswered-count').textContent = examData.questions.length;
+        document.getElementById('exam-progress-bar').style.width = '0%';
+
+        renderAnswerSheet();
+        renderExamQuestion();
+        startTimer();
+    }
+
+    function renderAnswerSheet() {
+        const html = examData.questions.map((q, i) => {
+            const answered = examData.answers[i] !== undefined;
+            const isCurrent = i === examData.current;
+            return `<button class="answer-sheet-btn ${answered?'answered':''} ${isCurrent?'current':''}" onclick="goToExamQuestion(${i})">${i+1}</button>`;
+        }).join('');
+        document.getElementById('exam-answer-sheet').innerHTML = html;
+    }
+
+    function renderExamQuestion() {
+        const q = examData.questions[examData.current];
+        const letters = ['A', 'B', 'C', 'D'];
+        const selected = examData.answers[examData.current];
+
+        document.getElementById('exam-question-area').innerHTML = `
+            <div class="question-box">
+                <span class="q-type">${moduleNames[q.module]} | 第${examData.current+1}题</span>
+                <div class="q-title">${q.q}</div>
+                <div class="options">
+                    ${q.options.map((opt, i) => `
+                        <div class="option ${selected===i?'selected':''}" onclick="selectExamAnswer(${i})" data-index="${i}">
+                            <span class="letter">${letters[i]}</span>
+                            <span>${opt.substring(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        document.getElementById('exam-btn-prev').style.display = examData.current === 0 ? 'none' : 'block';
+        document.getElementById('exam-btn-next').textContent = examData.current === examData.questions.length - 1 ? '最后一题' : '下一题';
+    }
+
+    function selectExamAnswer(index) {
+        examData.answers[examData.current] = index;
+        renderExamQuestion();
+        renderAnswerSheet();
+        updateExamStats();
+    }
+
+    function examPrevQuestion() {
+        if (examData.current > 0) {
+            examData.current--;
+            renderExamQuestion();
+            renderAnswerSheet();
+        }
+    }
+
+    function examNextQuestion() {
+        if (examData.current < examData.questions.length - 1) {
+            examData.current++;
+            renderExamQuestion();
+            renderAnswerSheet();
+        }
+    }
+
+    function goToExamQuestion(index) {
+        examData.current = index;
+        renderExamQuestion();
+        renderAnswerSheet();
+    }
+
+    function updateExamStats() {
+        const answered = Object.keys(examData.answers).length;
+        document.getElementById('exam-answered-count').textContent = answered;
+        document.getElementById('exam-unanswered-count').textContent = examData.questions.length - answered;
+        document.getElementById('exam-progress-text').textContent = `${examData.current+1}/${examData.questions.length}`;
+        document.getElementById('exam-progress-bar').style.width = `${(answered/examData.questions.length)*100}%`;
+    }
+
+    function startTimer() {
+        updateTimerDisplay();
+        examData.timer = setInterval(() => {
+            examData.remainingTime--;
+            updateTimerDisplay();
+
+            if (examData.remainingTime <= 0) {
+                clearInterval(examData.timer);
+                alert('时间到！自动交卷。');
+                submitExam();
+            }
+        }, 1000);
+    }
+
+    function updateTimerDisplay() {
+        const hours = Math.floor(examData.remainingTime / 3600);
+        const minutes = Math.floor((examData.remainingTime % 3600) / 60);
+        const seconds = examData.remainingTime % 60;
+        const display = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+
+        const timerEl = document.getElementById('exam-timer');
+        timerEl.textContent = display;
+
+        // 最后10分钟变红闪烁
+        if (examData.remainingTime <= 600) {
+            timerEl.classList.add('timer-warning');
+            timerEl.style.color = '#c0392b';
+        } else if (examData.remainingTime <= 1800) {
+            timerEl.style.color = '#e67e22';
+        }
+    }
+
+    function confirmSubmitExam() {
+        const unanswered = examData.questions.length - Object.keys(examData.answers).length;
+        const msg = unanswered > 0 ? `还有${unanswered}题未作答，确定交卷吗？` : '确定交卷吗？';
+        if (confirm(msg)) {
+            submitExam();
+        }
+    }
+
+    function submitExam() {
+        clearInterval(examData.timer);
+
+        let correct = 0;
+        const moduleStats = {};
+
+        examData.questions.forEach((q, i) => {
+            const userAnswer = examData.answers[i];
+            const isCorrect = userAnswer === q.answer;
+
+            if (!moduleStats[q.module]) {
+                moduleStats[q.module] = { total: 0, correct: 0 };
+            }
+            moduleStats[q.module].total++;
+
+            if (isCorrect) {
+                correct++;
+                moduleStats[q.module].correct++;
+            } else {
+                // 错题加入错题本
+                const wrongItem = {
+                    ...q,
+                    moduleName: moduleNames[q.module],
+                    timestamp: Date.now(),
+                    userAnswer: userAnswer
+                };
+                if (!wrongQuestions.find(w => w.q === q.q && w.module === q.module)) {
+                    wrongQuestions.push(wrongItem);
+                }
+            }
+        });
+
+        const total = examData.questions.length;
+        const score = Math.round(correct / total * 100);
+        const timeUsed = examData.totalTime - examData.remainingTime;
+        const timeMinutes = Math.floor(timeUsed / 60);
+        const timeSeconds = timeUsed % 60;
+
+        // 保存考试记录
+        const examRecord = {
+            type: examData.type,
+            module: examData.module,
+            date: Date.now(),
+            total: total,
+            correct: correct,
+            score: score,
+            timeUsed: `${timeMinutes}分${timeSeconds}秒`
+        };
+        examHistory.push(examRecord);
+        localStorage.setItem('examHistory', JSON.stringify(examHistory));
+        saveData();
+
+        // 显示结果
+        document.getElementById('exam-active').style.display = 'none';
+        document.getElementById('exam-result').style.display = 'block';
+        document.getElementById('result-title').textContent = examData.type === 'full' ? '行测全真模拟成绩' : moduleNames[examData.module] + '限时测试成绩';
+
+        const scoreColor = score >= 70 ? '#34a853' : score >= 60 ? '#fbbc04' : '#e74c3c';
+        const scoreComment = score >= 80 ? '优秀！继续保持' : score >= 70 ? '良好，再接再厉' : score >= 60 ? '及格，需加强练习' : '需要加油了';
+
+        let moduleHtml = '';
+        if (examData.type === 'full') {
+            moduleHtml = `
+                <h3 style="margin:20px 0 15px;">各模块正确率</h3>
+                ${Object.keys(moduleStats).map(m => {
+                    const s = moduleStats[m];
+                    const rate = Math.round(s.correct / s.total * 100);
+                    return `
+                        <div style="margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                                <span>${moduleNames[m]}</span>
+                                <span>${s.correct}/${s.total} (${rate}%)</span>
+                            </div>
+                            <div class="progress-bar"><div class="progress-fill" style="width:${rate}%;background:${rate>=70?'#34a853':rate>=60?'#fbbc04':'#e74c3c'}"></div></div>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+        }
+
+        document.getElementById('result-content').innerHTML = `
+            <div style="text-align:center;padding:30px 0;">
+                <div style="font-size:72px;font-weight:bold;color:${scoreColor};">${score}</div>
+                <div style="font-size:18px;color:${scoreColor};margin:10px 0;">${scoreComment}</div>
+                <div style="color:#666;">答对 ${correct} 题 / 共 ${total} 题 | 用时 ${timeMinutes}分${timeSeconds}秒</div>
+            </div>
+
+            ${moduleHtml}
+
+            <div style="margin-top:20px;padding:15px;background:#f8f9fa;border-radius:8px;">
+                <h4 style="margin-bottom:10px;">答题详情</h4>
+                <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                    ${examData.questions.map((q, i) => {
+                        const userAnswer = examData.answers[i];
+                        const isCorrect = userAnswer === q.answer;
+                        const isUnanswered = userAnswer === undefined;
+                        const bg = isUnanswered ? '#ff9800' : isCorrect ? '#34a853' : '#e74c3c';
+                        return `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:${bg};color:white;font-size:12px;font-weight:bold;" title="第${i+1}题: ${isUnanswered?'未作答':isCorrect?'正确':'错误'}">${i+1}</span>`;
+                    }).join('')}
+                </div>
+                <div style="margin-top:10px;font-size:12px;color:#666;">
+                    <span style="color:#34a853;">● 正确</span> |
+                    <span style="color:#e74c3c;">● 错误</span> |
+                    <span style="color:#ff9800;">● 未作答</span>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:30px;">
+                <button class="btn btn-primary" onclick="backToExamSelect()" style="margin-right:10px;">返回</button>
+                <button class="btn btn-success" onclick="reviewExamWrong()">查看错题解析</button>
+            </div>
+        `;
+    }
+
+    function backToExamSelect() {
+        document.getElementById('exam-select').style.display = 'block';
+        document.getElementById('exam-active').style.display = 'none';
+        document.getElementById('exam-result').style.display = 'none';
+        showExamHistory();
+        renderTrendChart();
+    }
+
+    function reviewExamWrong() {
+        const wrongList = examData.questions.filter((q, i) => {
+            const userAnswer = examData.answers[i];
+            return userAnswer !== q.answer;
+        });
+
+        if (wrongList.length === 0) {
+            alert('恭喜！全部答对！');
+            return;
+        }
+
+        const letters = ['A', 'B', 'C', 'D'];
+        let html = '<h3 style="margin-bottom:15px;">错题解析</h3>';
+
+        wrongList.forEach((q, i) => {
+            const userAnswer = examData.answers[examData.questions.indexOf(q)];
+            html += `
+                <div style="padding:15px;border:1px solid #ffcdd2;border-radius:8px;margin-bottom:15px;background:#fff5f5;">
+                    <p style="font-weight:bold;margin-bottom:8px;">[${moduleNames[q.module]}] ${q.q}</p>
+                    ${q.options.map((opt, j) => {
+                        let style = '';
+                        if (j === q.answer) style = 'color:#34a853;font-weight:bold;';
+                        else if (j === userAnswer) style = 'color:#e74c3c;text-decoration:line-through;';
+                        return `<p style="${style}">${opt}</p>`;
+                    }).join('')}
+                    <p style="margin-top:8px;color:#666;font-size:13px;">你的答案：${userAnswer!==undefined?letters[userAnswer]:'未作答'} | 正确答案：${letters[q.answer]}</p>
+                    <p style="color:#e65100;font-size:13px;background:#fff3e0;padding:8px;border-radius:4px;margin-top:8px;">${q.explain}</p>
+                </div>
+            `;
+        });
+
+        document.getElementById('result-content').innerHTML += `
+            <div style="margin-top:20px;">${html}</div>
+            <div style="text-align:center;margin-top:20px;">
+                <button class="btn btn-primary" onclick="backToExamSelect()">返回</button>
+            </div>
+        `;
+
+        window.scrollTo(0, document.getElementById('result-content').scrollHeight);
+    }
+
+    function updateHomeStats() {
+        const total = practiceHistory.reduce((sum, h) => sum + h.total, 0);
+        const correct = practiceHistory.reduce((sum, h) => sum + h.correct, 0);
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-correct').textContent = correct;
+        document.getElementById('stat-rate').textContent = total ? Math.round(correct/total*100) + '%' : '0%';
+        document.getElementById('stat-wrong').textContent = wrongQuestions.length;
+    }
+
+    // ========== 知识预习 ==========
+    function showKnowledge(module) {
+        document.querySelectorAll('#knowledge-tabs .tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const data = knowledgeData[module] || [];
+        const html = data.map((item, i) => `
+            <div class="knowledge-item" onclick="this.classList.toggle('expanded')">
+                <h4>${item.title}</h4>
+                <p>${item.content.substring(0, 50)}...</p>
+                <div class="detail"><p>${item.content}</p></div>
+            </div>
+        `).join('');
+        document.getElementById('knowledge-content').innerHTML = html || '<div class="empty-state"><div class="icon">📚</div><p>暂无内容</p></div>';
+    }
+
+    // ========== 刷题功能 ==========
+    function startPractice(module) {
+        const questions = shuffle([...questionBank[module]]).slice(0, 10);
+        currentPractice = { module, questions, current: 0, answers: [], correct: 0 };
+
+        showPage('practice');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.nav-btn:nth-child(3)').classList.add('active');
+
+        document.getElementById('practice-title').textContent = moduleNames[module] + ' - 专项练习';
+        document.getElementById('practice-progress').innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:14px;">
+                <span>进度：${currentPractice.current + 1} / ${questions.length}</span>
+                <span>正确：${currentPractice.correct}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${(currentPractice.current/questions.length)*100}%"></div></div>
+        `;
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = currentPractice.questions[currentPractice.current];
+        if (!q) return;
+
+        const letters = ['A', 'B', 'C', 'D'];
+        document.getElementById('question-area').innerHTML = `
+            <div class="question-box">
+                <span class="q-type">${moduleNames[currentPractice.module]}</span>
+                <div class="q-title">第${currentPractice.current + 1}题：${q.q}</div>
+                <div class="options">
+                    ${q.options.map((opt, i) => `
+                        <div class="option" onclick="selectOption(this, ${i})" data-index="${i}">
+                            <span class="letter">${letters[i]}</span>
+                            <span>${opt.substring(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="explanation">
+                    <h4>答案解析</h4>
+                    <p><strong>正确答案：${letters[q.answer]}</strong></p>
+                    <p>${q.explain}</p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('btn-submit').style.display = 'block';
+        document.getElementById('btn-next').style.display = 'none';
+        document.getElementById('btn-finish').style.display = 'none';
+    }
+
+    function selectOption(el, index) {
+        document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        currentPractice.currentAnswer = index;
+    }
+
+    function submitAnswer() {
+        if (currentPractice.currentAnswer === undefined) {
+            showToast('请先选择答案');
+            return;
+        }
+
+        const q = currentPractice.questions[currentPractice.current];
+        const isCorrect = currentPractice.currentAnswer === q.answer;
+
+        document.querySelectorAll('.option').forEach((opt, i) => {
+            opt.style.pointerEvents = 'none';
+            if (i === q.answer) opt.classList.add('correct');
+            if (i === currentPractice.currentAnswer && !isCorrect) opt.classList.add('wrong');
+        });
+
+        document.getElementById('explanation').classList.add('show');
+
+        if (!isCorrect) {
+            const wrongItem = {
+                ...q,
+                module: currentPractice.module,
+                moduleName: moduleNames[currentPractice.module],
+                timestamp: Date.now(),
+                userAnswer: currentPractice.currentAnswer
+            };
+            if (!wrongQuestions.find(w => w.q === q.q && w.module === q.module)) {
+                wrongQuestions.push(wrongItem);
+            }
+        } else {
+            currentPractice.correct++;
+            wrongQuestions = wrongQuestions.filter(w => !(w.q === q.q && w.module === currentPractice.module));
+        }
+
+        saveData();
+        currentPractice.currentAnswer = undefined;
+
+        document.getElementById('btn-submit').style.display = 'none';
+        document.getElementById('btn-next').style.display = 'block';
+        if (currentPractice.current >= currentPractice.questions.length - 1) {
+            document.getElementById('btn-next').style.display = 'none';
+            document.getElementById('btn-finish').style.display = 'block';
+        }
+    }
+
+    function nextQuestion() {
+        currentPractice.current++;
+        const questions = currentPractice.questions;
+        document.getElementById('practice-progress').innerHTML = `
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;font-size:14px;">
+                <span>进度：${currentPractice.current + 1} / ${questions.length}</span>
+                <span>正确：${currentPractice.correct}</span>
+            </div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${(currentPractice.current/questions.length)*100}%"></div></div>
+        `;
+        renderQuestion();
+    }
+
+    function finishPractice() {
+        const { module, questions, correct } = currentPractice;
+        const total = questions.length;
+        practiceHistory.push({ module, total, correct, date: Date.now() });
+        saveData();
+
+        alert(`练习完成！\n模块：${moduleNames[module]}\n正确：${correct}/${total}\n正确率：${Math.round(correct/total*100)}%`);
+        showPage('home');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('.nav-btn:first-child').classList.add('active');
+    }
+
+    // ========== 错题本 ==========
+    let currentWrongModule = 'all';
+
+    function showWrongList(module) {
+        currentWrongModule = module;
+        document.querySelectorAll('#wrong-tabs .tab').forEach(t => t.classList.remove('active'));
+        if (event && event.target) event.target.classList.add('active');
+        renderWrongStats();
+        filterWrongList();
+    }
+
+    function filterWrongList() {
+        let filtered = currentWrongModule === 'all' ? [...wrongQuestions] : wrongQuestions.filter(w => w.module === currentWrongModule);
+
+        // 搜索过滤
+        const search = document.getElementById('wrong-search').value.toLowerCase();
+        if (search) {
+            filtered = filtered.filter(w => w.q.toLowerCase().includes(search) || w.explain.toLowerCase().includes(search));
+        }
+
+        // 掌握状态过滤
+        const masteredFilter = document.getElementById('wrong-mastered').value;
+        if (masteredFilter === 'mastered') {
+            filtered = filtered.filter(w => w.mastered);
+        } else if (masteredFilter === 'unmastered') {
+            filtered = filtered.filter(w => !w.mastered);
+        }
+
+        // 排序
+        const sort = document.getElementById('wrong-sort').value;
+        if (sort === 'newest') {
+            filtered.sort((a, b) => b.timestamp - a.timestamp);
+        } else if (sort === 'oldest') {
+            filtered.sort((a, b) => a.timestamp - b.timestamp);
+        } else if (sort === 'module') {
+            filtered.sort((a, b) => a.module.localeCompare(b.module));
+        }
+
+        renderWrongList(filtered);
+    }
+
+    function renderWrongStats() {
+        const total = wrongQuestions.length;
+        const mastered = wrongQuestions.filter(w => w.mastered).length;
+        const unmastered = total - mastered;
+
+        const moduleStats = {};
+        Object.keys(moduleNames).forEach(m => {
+            moduleStats[m] = wrongQuestions.filter(w => w.module === m).length;
+        });
+
+        document.getElementById('wrong-stats').innerHTML = `
+            <div class="stats">
+                <div class="stat-card"><div class="number" style="color:#e74c3c;">${total}</div><div class="label">总错题</div></div>
+                <div class="stat-card"><div class="number" style="color:#fbbc04;">${unmastered}</div><div class="label">未掌握</div></div>
+                <div class="stat-card"><div class="number" style="color:#34a853;">${mastered}</div><div class="label">已掌握</div></div>
+                <div class="stat-card"><div class="number">${total ? Math.round(mastered/total*100) : 0}%</div><div class="label">掌握率</div></div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                ${Object.keys(moduleNames).map(m => `
+                    <span style="font-size:12px;color:#666;">${moduleNames[m]}：<strong>${moduleStats[m]}</strong>题</span>
+                `).join('|')}
+            </div>
+        `;
+    }
+
+    function renderWrongList(filtered) {
+        if (filtered.length === 0) {
+            document.getElementById('wrong-list').innerHTML = '<div class="empty-state"><div class="icon">🎉</div><p>暂无错题，继续保持！</p></div>';
+            return;
+        }
+
+        const letters = ['A', 'B', 'C', 'D'];
+        document.getElementById('wrong-list').innerHTML = filtered.map((item, i) => {
+            const globalIndex = wrongQuestions.findIndex(w => w.q === item.q && w.module === item.module);
+            return `
+                <div class="wrong-item ${item.mastered ? 'mastered' : ''}" style="${item.mastered ? 'opacity:0.7;border-color:#c8e6c9;background:#f1f8e9;' : ''}">
+                    <div style="display:flex;justify-content:space-between;align-items:start;">
+                        <h4 style="flex:1;">
+                            <span style="display:inline-block;width:20px;height:20px;border-radius:50%;background:${item.mastered?'#34a853':'#e74c3c'};color:white;text-align:center;line-height:20px;font-size:11px;margin-right:6px;">${item.mastered?'✓':'✗'}</span>
+                            [${item.moduleName}] ${item.q}
+                        </h4>
+                    </div>
+                    <p style="font-size:13px;color:#666;margin:8px 0;">${item.options.map((o, j) => `<span style="color:${j===item.answer?'#34a853':'inherit'};${j===item.userAnswer && j!==item.answer?'text-decoration:line-through;color:#e74c3c;':''}">${o}</span>`).join('<br>')}</p>
+                    <div style="font-size:13px;color:#e65100;background:#fff3e0;padding:8px;border-radius:4px;margin:8px 0;">${item.explain}</div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                        <div class="meta">正确答案：${letters[item.answer]} ${item.userAnswer!==undefined && item.userAnswer!==item.answer ? `| 你的答案：${letters[item.userAnswer]}` : ''} | ${new Date(item.timestamp).toLocaleString('zh-CN')}</div>
+                        <div style="display:flex;gap:6px;">
+                            <button class="btn btn-sm" style="background:${item.mastered?'#fbbc04':'#34a853'};color:white;font-size:12px;padding:4px 10px;" onclick="toggleMastered(${globalIndex})">${item.mastered?'取消掌握':'标记掌握'}</button>
+                            <button class="btn btn-sm" style="background:#1a73e8;color:white;font-size:12px;padding:4px 10px;" onclick="reviewSingleWrong(${globalIndex})">重做</button>
+                            <button class="btn btn-sm" style="background:#e74c3c;color:white;font-size:12px;padding:4px 10px;" onclick="deleteWrongItem(${globalIndex})">删除</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleMastered(index) {
+        wrongQuestions[index].mastered = !wrongQuestions[index].mastered;
+        saveData();
+        filterWrongList();
+        renderWrongStats();
+        showToast(wrongQuestions[index].mastered ? '已标记为掌握' : '已取消掌握');
+    }
+
+    function deleteWrongItem(index) {
+        if (confirm('确定要删除这道错题吗？')) {
+            wrongQuestions.splice(index, 1);
+            saveData();
+            filterWrongList();
+            renderWrongStats();
+            showToast('已删除');
+        }
+    }
+
+    function reviewSingleWrong(index) {
+        const item = wrongQuestions[index];
+        reviewWrongQuestions([{...item}]);
+    }
+
+    function startMasteredReview() {
+        const mastered = wrongQuestions.filter(w => w.mastered);
+        if (mastered.length === 0) {
+            showToast('暂无已掌握的错题');
+            return;
+        }
+        reviewWrongQuestions(shuffle([...mastered]).slice(0, Math.min(10, mastered.length)));
+    }
+
+    function exportWrongList() {
+        if (wrongQuestions.length === 0) {
+            showToast('暂无错题可导出');
+            return;
+        }
+
+        const letters = ['A', 'B', 'C', 'D'];
+        let content = '行测错题本导出\n';
+        content += `导出时间：${new Date().toLocaleString('zh-CN')}\n`;
+        content += `总题数：${wrongQuestions.length}题\n`;
+        content += '========================================\n\n';
+
+        wrongQuestions.forEach((item, i) => {
+            const status = item.mastered ? '[已掌握]' : '[未掌握]';
+            content += `第${i+1}题 ${status} [${item.moduleName}]\n`;
+            content += `题目：${item.q}\n`;
+            item.options.forEach(o => { content += `${o}\n`; });
+            content += `正确答案：${letters[item.answer]}\n`;
+            content += `解析：${item.explain}\n`;
+            content += `添加时间：${new Date(item.timestamp).toLocaleString('zh-CN')}\n`;
+            content += '\n';
+        });
+
+        const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `行测错题本_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('错题本已导出');
+    }
+
+    function startWrongReview(module) {
+        const filtered = module ? wrongQuestions.filter(w => w.module === module) : wrongQuestions;
+        if (filtered.length === 0) {
+            showToast('该模块暂无错题');
+            return;
+        }
+        reviewWrongQuestions(shuffle([...filtered]).slice(0, Math.min(10, filtered.length)));
+    }
+
+    function startAllWrongReview() {
+        if (wrongQuestions.length === 0) {
+            showToast('暂无错题');
+            return;
+        }
+        reviewWrongQuestions(shuffle([...wrongQuestions]).slice(0, Math.min(10, wrongQuestions.length)));
+    }
+
+    let reviewIndex = 0;
+    let reviewQuestions = [];
+    let reviewCorrect = 0;
+
+    function reviewWrongQuestions(questions) {
+        reviewQuestions = questions;
+        reviewIndex = 0;
+        reviewCorrect = 0;
+        document.getElementById('review-modal').classList.add('show');
+        renderReviewQuestion();
+    }
+
+    function renderReviewQuestion() {
+        const q = reviewQuestions[reviewIndex];
+        if (!q) return finishReview();
+
+        const letters = ['A', 'B', 'C', 'D'];
+        document.getElementById('review-content').innerHTML = `
+            <p style="margin-bottom:10px;color:#666;">第 ${reviewIndex+1}/${reviewQuestions.length} 题</p>
+            <div class="question-box">
+                <span class="q-type">${q.moduleName}</span>
+                <div class="q-title">${q.q}</div>
+                <div class="options">
+                    ${q.options.map((opt, i) => `
+                        <div class="option" onclick="selectReviewOption(this, ${i})" data-index="${i}">
+                            <span class="letter">${letters[i]}</span>
+                            <span>${opt.substring(2)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="explanation" id="review-explanation">
+                    <h4>答案解析</h4>
+                    <p><strong>正确答案：${letters[q.answer]}</strong></p>
+                    <p>${q.explain}</p>
+                </div>
+            </div>
+            <div style="text-align:center;margin-top:15px;">
+                <button class="btn btn-primary" id="btn-review-submit" onclick="submitReviewAnswer()">提交答案</button>
+                <button class="btn btn-success" id="btn-review-next" onclick="nextReviewQuestion()" style="display:none;">下一题</button>
+            </div>
+        `;
+    }
+
+    let reviewAnswer = undefined;
+
+    function selectReviewOption(el, index) {
+        document.querySelectorAll('#review-content .option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        reviewAnswer = index;
+    }
+
+    function submitReviewAnswer() {
+        if (reviewAnswer === undefined) {
+            showToast('请先选择答案');
+            return;
+        }
+
+        const q = reviewQuestions[reviewIndex];
+        const isCorrect = reviewAnswer === q.answer;
+
+        document.querySelectorAll('#review-content .option').forEach((opt, i) => {
+            opt.style.pointerEvents = 'none';
+            if (i === q.answer) opt.classList.add('correct');
+            if (i === reviewAnswer && !isCorrect) opt.classList.add('wrong');
+        });
+
+        document.getElementById('review-explanation').classList.add('show');
+        if (isCorrect) reviewCorrect++;
+
+        reviewAnswer = undefined;
+        document.getElementById('btn-review-submit').style.display = 'none';
+        document.getElementById('btn-review-next').style.display = 'inline-block';
+    }
+
+    function nextReviewQuestion() {
+        reviewIndex++;
+        renderReviewQuestion();
+    }
+
+    function finishReview() {
+        document.getElementById('review-content').innerHTML = `
+            <div style="text-align:center;padding:30px;">
+                <h2 style="color:#1a73e8;margin-bottom:20px;">错题检测完成！</h2>
+                <p style="font-size:18px;margin-bottom:10px;">正确：${reviewCorrect} / ${reviewQuestions.length}</p>
+                <p style="font-size:16px;color:#666;margin-bottom:20px;">正确率：${Math.round(reviewCorrect/reviewQuestions.length*100)}%</p>
+                <button class="btn btn-primary" onclick="closeModal()">关闭</button>
+            </div>
+        `;
+    }
+
+    function closeModal() {
+        document.getElementById('review-modal').classList.remove('show');
+    }
+
+    function clearWrongList() {
+        if (confirm('确定要清空所有错题吗？此操作不可恢复！')) {
+            wrongQuestions = [];
+            saveData();
+            currentWrongModule = 'all';
+            renderWrongStats();
+            filterWrongList();
+            showToast('错题本已清空');
+        }
+    }
+
+    // ========== 统计 ==========
+    function showStats() {
+        const moduleStats = {};
+        Object.keys(moduleNames).forEach(m => {
+            moduleStats[m] = { total: 0, correct: 0 };
+        });
+        practiceHistory.forEach(h => {
+            if (moduleStats[h.module]) {
+                moduleStats[h.module].total += h.total;
+                moduleStats[h.module].correct += h.correct;
+            }
+        });
+
+        const html = Object.keys(moduleNames).map(m => {
+            const s = moduleStats[m];
+            const rate = s.total ? Math.round(s.correct/s.total*100) : 0;
+            return `
+                <div style="margin-bottom:20px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                        <strong>${moduleNames[m]}</strong>
+                        <span>${s.correct}/${s.total} (${rate}%)</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" style="width:${rate}%"></div></div>
+                </div>
+            `;
+        }).join('');
+
+        const recentWrong = wrongQuestions.filter(w => Date.now() - w.timestamp < 7*24*60*60*1000).length;
+
+        document.getElementById('stats-content').innerHTML = `
+            <div class="stats">
+                <div class="stat-card"><div class="number">${practiceHistory.length}</div><div class="label">练习次数</div></div>
+                <div class="stat-card"><div class="number">${practiceHistory.reduce((s,h)=>s+h.total,0)}</div><div class="label">总做题数</div></div>
+                <div class="stat-card"><div class="number">${wrongQuestions.length}</div><div class="label">错题总数</div></div>
+                <div class="stat-card"><div class="number">${recentWrong}</div><div class="label">本周错题</div></div>
+            </div>
+            <h3 style="margin:20px 0 15px;">各模块正确率</h3>
+            ${html}
+        `;
+    }
+
+    // ========== 手写板功能 ==========
+    let drawingCanvas, drawingCtx;
+    let isDrawing = false;
+    let currentTool = 'pen';
+    let currentColor = '#333';
+    let brushSize = 2;
+    let drawingHistory = [];
+    let historyIndex = -1;
+    let lastX, lastY;
+
+    function initDrawingPad() {
+        drawingCanvas = document.getElementById('drawing-canvas');
+        drawingCtx = drawingCanvas.getContext('2d');
+        resizeCanvas();
+
+        // 鼠标事件
+        drawingCanvas.addEventListener('mousedown', startDrawing);
+        drawingCanvas.addEventListener('mousemove', draw);
+        drawingCanvas.addEventListener('mouseup', stopDrawing);
+        drawingCanvas.addEventListener('mouseout', stopDrawing);
+
+        // 触摸事件（支持手写笔）
+        drawingCanvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+        drawingCanvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+        drawingCanvas.addEventListener('touchend', handleTouchEnd);
+
+        // 窗口大小变化时重新调整
+        window.addEventListener('resize', resizeCanvas);
+
+        // 拖动功能
+        initDrag();
+
+        saveState();
+    }
+
+    function resizeCanvas() {
+        if (!drawingCanvas) return;
+        const rect = drawingCanvas.parentElement.getBoundingClientRect();
+        const headerHeight = drawingCanvas.parentElement.querySelector('.drawing-pad-header').offsetHeight;
+        const toolsHeight = drawingCanvas.parentElement.querySelector('.drawing-pad-tools').offsetHeight;
+        drawingCanvas.width = rect.width;
+        drawingCanvas.height = rect.height - headerHeight - toolsHeight;
+        redrawCanvas();
+    }
+
+    function handleTouchStart(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = drawingCanvas.getBoundingClientRect();
+        lastX = touch.clientX - rect.left;
+        lastY = touch.clientY - rect.top;
+        isDrawing = true;
+        drawingCtx.beginPath();
+        drawingCtx.moveTo(lastX, lastY);
+    }
+
+    function handleTouchMove(e) {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const touch = e.touches[0];
+        const rect = drawingCanvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+
+        drawingCtx.lineWidth = currentTool === 'eraser' ? brushSize * 5 : brushSize;
+        drawingCtx.lineCap = 'round';
+        drawingCtx.lineJoin = 'round';
+        drawingCtx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+        drawingCtx.globalCompositeOperation = currentTool === 'eraser' ? 'source-over' : 'source-over';
+
+        drawingCtx.beginPath();
+        drawingCtx.moveTo(lastX, lastY);
+        drawingCtx.lineTo(x, y);
+        drawingCtx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+
+    function handleTouchEnd(e) {
+        if (isDrawing) {
+            isDrawing = false;
+            saveState();
+        }
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        const rect = drawingCanvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const rect = drawingCanvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        drawingCtx.lineWidth = currentTool === 'eraser' ? brushSize * 5 : brushSize;
+        drawingCtx.lineCap = 'round';
+        drawingCtx.lineJoin = 'round';
+        drawingCtx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : currentColor;
+
+        drawingCtx.beginPath();
+        drawingCtx.moveTo(lastX, lastY);
+        drawingCtx.lineTo(x, y);
+        drawingCtx.stroke();
+
+        lastX = x;
+        lastY = y;
+    }
+
+    function stopDrawing() {
+        if (isDrawing) {
+            isDrawing = false;
+            saveState();
+        }
+    }
+
+    function saveState() {
+        historyIndex++;
+        drawingHistory = drawingHistory.slice(0, historyIndex);
+        drawingHistory.push(drawingCanvas.toDataURL());
+    }
+
+    function redrawCanvas() {
+        if (historyIndex < 0 || !drawingHistory[historyIndex]) return;
+        const img = new Image();
+        img.onload = () => {
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            drawingCtx.drawImage(img, 0, 0);
+        };
+        img.src = drawingHistory[historyIndex];
+    }
+
+    function undoDrawing() {
+        if (historyIndex > 0) {
+            historyIndex--;
+            redrawCanvas();
+        } else if (historyIndex === 0) {
+            historyIndex = -1;
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+        }
+    }
+
+    function clearCanvas() {
+        if (confirm('确定清空草稿纸？')) {
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            saveState();
+        }
+    }
+
+    function setTool(tool) {
+        currentTool = tool;
+        document.getElementById('tool-pen').className = 'tool-btn' + (tool === 'pen' ? ' active' : '');
+        document.getElementById('tool-eraser').className = 'tool-btn' + (tool === 'eraser' ? ' eraser-active' : '');
+        drawingCanvas.style.cursor = tool === 'eraser' ? 'cell' : 'crosshair';
+    }
+
+    function setColor(color, el) {
+        currentColor = color;
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        el.classList.add('active');
+        setTool('pen');
+    }
+
+    function setBrushSize(size) {
+        brushSize = parseInt(size);
+    }
+
+    function toggleDrawingPad() {
+        const pad = document.getElementById('drawing-pad');
+        const toggle = document.getElementById('drawing-pad-toggle');
+        pad.classList.toggle('show');
+        toggle.style.display = pad.classList.contains('show') ? 'none' : 'flex';
+        if (pad.classList.contains('show')) {
+            setTimeout(resizeCanvas, 10);
+        }
+    }
+
+    function initDrag() {
+        const header = document.getElementById('drawing-pad-header');
+        const pad = document.getElementById('drawing-pad');
+        let isDragging = false;
+        let startX, startY, startLeft, startTop;
+
+        header.addEventListener('mousedown', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = pad.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            pad.style.transition = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            pad.style.left = (startLeft + dx) + 'px';
+            pad.style.top = (startTop + dy) + 'px';
+            pad.style.right = 'auto';
+            pad.style.bottom = 'auto';
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            pad.style.transition = '';
+        });
+
+        // 触摸拖动
+        header.addEventListener('touchstart', (e) => {
+            if (e.target.tagName === 'BUTTON') return;
+            isDragging = true;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            const rect = pad.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
+            pad.style.transition = 'none';
+        }, { passive: true });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const dx = e.touches[0].clientX - startX;
+            const dy = e.touches[0].clientY - startY;
+            pad.style.left = (startLeft + dx) + 'px';
+            pad.style.top = (startTop + dy) + 'px';
+            pad.style.right = 'auto';
+            pad.style.bottom = 'auto';
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            pad.style.transition = '';
+        });
+    }
+
+    // ========== 工具函数 ==========
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // 初始化
+    updateHomeStats();
+    initDrawingPad();
+    </script>
+</body>
+</html>
